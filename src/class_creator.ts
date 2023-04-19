@@ -6,6 +6,9 @@ type command_replace_model = {
     replace_string: string
 }
 
+var NAMESPACEBEGIN: string = "NAMESPACEBEGIN";
+var NAMESPACEEND: string = "NAMESPACEEND";
+
 export class class_creator
 {
     header_file_content: string = "";
@@ -14,8 +17,11 @@ export class class_creator
     create_location: string = "";
     header_file: string = "";
     source_file: string = "";
+    namespace_begin: string = "";
+    namespace_end: string = "";
 
-    constructor(class_name: string, header_preset: string, source_file_preset: string, create_location: string, source_file_name: string, header_file_name: string) 
+
+    constructor(class_name: string, header_preset: string, source_file_preset: string, create_location: string, source_file_name: string, header_file_name: string)
     {
         this.class_name = class_name;
         this.header_file_content = header_preset;
@@ -23,6 +29,14 @@ export class class_creator
         this.create_location = create_location;
         this.header_file = header_file_name;
         this.source_file = source_file_name;
+        if (this.has_namespace_preset())
+        {
+            var ret = this.prepare_namespace();
+            if (!ret)
+            {
+                return
+            }
+        }
         this.parse();
     }
 
@@ -56,6 +70,26 @@ export class class_creator
 
         this.header_file_content = this.execute_replacement(content_cmds, this.header_file_content);
         this.source_file_content = this.execute_replacement(content_cmds, this.source_file_content);
+    }
+
+    prepare_namespace()
+    {
+        var arrNamespaces = this.create_location.split("/");
+        for (var ns of arrNamespaces) {
+            if (!ns.length) {
+                this.namespace_begin += "namespace " + ns + "{\n";
+                this.namespace_end += "}\n"
+            }
+          }
+    }
+
+    has_namespace_preset()
+    {
+        if (this.header_file.includes(NAMESPACEBEGIN) && this.header_file_content.includes(NAMESPACEBEGIN))
+        {
+            return true;
+        }
+        return false;
     }
 
     execute_replacement(replacements: Array<command_replace_model>, execute_on: string)
